@@ -73,7 +73,12 @@ struct hmm;
 #define _slub_counter_t		unsigned int
 #endif /* !CONFIG_HAVE_ALIGNED_STRUCT_PAGE */
 
+//管理系统中所有的页
+//系统中的每个物理页(与真实的物理页相关 )
+//(描述物理内存本身 而不是描述包含在其中的数据)
 struct page {
+	//存放页的状态(脏 PG_dirty include/linux/page-flags.h)
+	//enum pageflags 
 	/* First double word block */
 	unsigned long flags;		/* Atomic flags, some possibly
 					 * updated asynchronously */
@@ -119,7 +124,8 @@ struct page {
 			 * Usage count, *USE WRAPPER FUNCTION* when manual
 			 * accounting. See page_ref.h
 			 */
-			atomic_t _refcount;
+			//存放页的引用计数
+			atomic_t _refcount;   
 		};
 	};
 
@@ -207,6 +213,8 @@ struct page {
 	 * WANT_PAGE_VIRTUAL in asm/page.h
 	 */
 #if defined(WANT_PAGE_VIRTUAL)
+	//页的虚拟地址 页在虚拟内存的地址
+	//高端内存 并不永久的映射在内核的地址空间上, 这个域的值为NULL
 	void *virtual;			/* Kernel virtual address (NULL if
 					   not kmapped, ie. highmem) */
 #endif /* WANT_PAGE_VIRTUAL */

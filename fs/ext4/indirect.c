@@ -71,31 +71,33 @@ static inline void add_chain(Indirect *p, struct buffer_head *bh, __le32 *v)
  * get there at all.
  */
 
+//4级寻址 逻辑块找物理块
+
 static int ext4_block_to_path(struct inode *inode,
 			      ext4_lblk_t i_block,
 			      ext4_lblk_t offsets[4], int *boundary)
 {
-	int ptrs = EXT4_ADDR_PER_BLOCK(inode->i_sb);
-	int ptrs_bits = EXT4_ADDR_PER_BLOCK_BITS(inode->i_sb);
+	int ptrs = EXT4_ADDR_PER_BLOCK(inode->i_sb); // 1024
+	int ptrs_bits = EXT4_ADDR_PER_BLOCK_BITS(inode->i_sb); // 32
 	const long direct_blocks = EXT4_NDIR_BLOCKS,
 		indirect_blocks = ptrs,
 		double_blocks = (1 << (ptrs_bits * 2));
 	int n = 0;
 	int final = 0;
 
-	if (i_block < direct_blocks) {
+	if (i_block < direct_blocks) {  // 0 - 11
 		offsets[n++] = i_block;
 		final = direct_blocks;
-	} else if ((i_block -= direct_blocks) < indirect_blocks) {
+	} else if ((i_block -= direct_blocks) < indirect_blocks) {  // 12
 		offsets[n++] = EXT4_IND_BLOCK;
 		offsets[n++] = i_block;
 		final = ptrs;
-	} else if ((i_block -= indirect_blocks) < double_blocks) {
+	} else if ((i_block -= indirect_blocks) < double_blocks) {  // 13
 		offsets[n++] = EXT4_DIND_BLOCK;
 		offsets[n++] = i_block >> ptrs_bits;
 		offsets[n++] = i_block & (ptrs - 1);
 		final = ptrs;
-	} else if (((i_block -= double_blocks) >> (ptrs_bits * 2)) < ptrs) {
+	} else if (((i_block -= double_blocks) >> (ptrs_bits * 2)) < ptrs) {  // 14
 		offsets[n++] = EXT4_TIND_BLOCK;
 		offsets[n++] = i_block >> (ptrs_bits * 2);
 		offsets[n++] = (i_block >> ptrs_bits) & (ptrs - 1);
@@ -141,6 +143,9 @@ static int ext4_block_to_path(struct inode *inode,
  *      Need to be called with
  *      down_read(&EXT4_I(inode)->i_data_sem)
  */
+
+//定位块号对应的块
+
 static Indirect *ext4_get_branch(struct inode *inode, int depth,
 				 ext4_lblk_t  *offsets,
 				 Indirect chain[4], int *err)
@@ -320,13 +325,16 @@ static int ext4_blks_to_allocate(Indirect *branch, int k, unsigned int blks,
  *	ext4_alloc_block() (normally -ENOSPC). Otherwise we set the chain
  *	as described above and return 0.
  */
+
+// 填块号 (get_branch的反例 读  ->  写)
+
 static int ext4_alloc_branch(handle_t *handle,
 			     struct ext4_allocation_request *ar,
 			     int indirect_blks, ext4_lblk_t *offsets,
 			     Indirect *branch)
 {
 	struct buffer_head *		bh;
-	ext4_fsblk_t			b, new_blocks[4];
+	ext4_fsblk_t			b, new_blocks[4];  //存放新块块号
 	__le32				*p;
 	int				i, j, err, len = 1;
 
@@ -373,7 +381,7 @@ static int ext4_alloc_branch(handle_t *handle,
 		unlock_buffer(bh);
 
 		BUFFER_TRACE(bh, "call ext4_handle_dirty_metadata");
-		err = ext4_handle_dirty_metadata(handle, ar->inode, bh);
+		err = ext4_handle_dirty_metadata(handle, ar->inode, bh);  //回写 同步回去
 		if (err)
 			goto failed;
 	}
@@ -533,6 +541,7 @@ int ext4_ind_map_blocks(handle_t *handle, struct inode *inode,
 	depth = ext4_block_to_path(inode, map->m_lblk, offsets,
 				   &blocks_to_boundary);
 
+	//深度
 	if (depth == 0)
 		goto out;
 
@@ -595,6 +604,7 @@ int ext4_ind_map_blocks(handle_t *handle, struct inode *inode,
 	if (flags & EXT4_GET_BLOCKS_METADATA_NOFAIL)
 		ar.flags |= EXT4_MB_USE_RESERVED;
 
+	//查找ideal
 	ar.goal = ext4_find_goal(inode, map->m_lblk, partial);
 
 	/* the number of blocks need to allocate for [d,t]indirect blocks */

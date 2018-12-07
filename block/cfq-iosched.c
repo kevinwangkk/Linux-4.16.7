@@ -325,6 +325,18 @@ struct cfq_io_cq {
 /*
  * Per block device queue structure
  */
+//每个块设备队列结构
+//complete fairness queueing  完全公平排队 I/O 调度程序
+
+//CFQ 试图均匀地分布对 I/O 带宽的访问,避免进程被饿死并实现较低的延迟,是 deadline和 as 调度器的折中. 
+
+//CFQ 赋予 I/O 请求一个优先级,而 I/O 优先级请求独立于进程优先级,高优先级的进程的读写不能自动地继承高的 I/O 优先级.
+
+/* 工作原理 *
+	CFQ 为每个进程/线程,单独创建一个队列来管理该进程所产生的请求,也就是说每个进程
+	一个队列,各队列之间的调度使用时间片来调度, 
+	以此来保证每个进程都能被很好的分配到 I/O 带宽.I/O 调度器每次执行一个进程的 4 次请求. 
+*/
 struct cfq_data {
 	struct request_queue *queue;
 	/* Root service tree for cfq_groups */
@@ -4815,6 +4827,7 @@ static struct elv_fs_entry cfq_attrs[] = {
 	__ATTR_NULL
 };
 
+//cfq调度算法 具体操作方法
 static struct elevator_type iosched_cfq = {
 	.ops.sq = {
 		.elevator_merge_fn = 		cfq_merge,

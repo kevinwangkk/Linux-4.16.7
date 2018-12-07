@@ -237,6 +237,9 @@ static inline unsigned bio_segments(struct bio *bio)
  * returns. and then bio would be freed memory when if (bio->bi_flags ...)
  * runs
  */
+
+//增加bio的使用计数 bio->__bi_cnt
+
 static inline void bio_get(struct bio *bio)
 {
 	bio->bi_flags |= (1 << BIO_REFFED);

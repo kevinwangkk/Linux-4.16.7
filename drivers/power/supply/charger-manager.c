@@ -1617,6 +1617,7 @@ static enum alarmtimer_restart cm_timer_func(struct alarm *alarm, ktime_t now)
 	return ALARMTIMER_NORESTART;
 }
 
+//充电管理
 static int charger_manager_probe(struct platform_device *pdev)
 {
 	struct charger_desc *desc = cm_get_drv_data(pdev);
@@ -1790,7 +1791,7 @@ static int charger_manager_probe(struct platform_device *pdev)
 		goto err_reg_sysfs;
 	}
 
-	/* Add to the list */
+	/* Add to the list */ //add时加锁
 	mutex_lock(&cm_list_mtx);
 	list_add(&cm->entry, &cm_list);
 	mutex_unlock(&cm_list_mtx);

@@ -11,6 +11,7 @@
 #include "blk-mq.h"
 #include "blk.h"
 
+//统计块设备层读写情况
 struct blk_queue_stats {
 	struct list_head callbacks;
 	spinlock_t lock;

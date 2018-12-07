@@ -747,6 +747,7 @@ int bio_add_pc_page(struct request_queue *q, struct bio *bio, struct page
 	if (unlikely(bio_flagged(bio, BIO_CLONED)))
 		return 0;
 
+	//9 = 512 防止操作太大的扇区
 	if (((bio->bi_iter.bi_size + len) >> 9) > queue_max_hw_sectors(q))
 		return 0;
 
@@ -830,6 +831,7 @@ EXPORT_SYMBOL(bio_add_pc_page);
  *	Attempt to add a page to the bio_vec maplist. This will only fail
  *	if either bio->bi_vcnt == bio->bi_max_vecs or it's a cloned bio.
  */
+ //把bio和page进行关联
 int bio_add_page(struct bio *bio, struct page *page,
 		 unsigned int len, unsigned int offset)
 {

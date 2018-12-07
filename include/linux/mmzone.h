@@ -298,6 +298,7 @@ struct per_cpu_nodestat {
 
 #endif /* !__GENERATING_BOUNDS.H */
 
+//分区情况
 enum zone_type {
 #ifdef CONFIG_ZONE_DMA
 	/*
@@ -355,10 +356,13 @@ enum zone_type {
 
 #ifndef __GENERATING_BOUNDS_H
 
+
+//区 系统中只有三个区, 也只有三个这样的结构
 struct zone {
 	/* Read-mostly fields */
 
 	/* zone watermarks, access with *_wmark_pages(zone) macros */
+	//水位基线 设置合适的内存消耗基准 该水位随空闲内存的多少而变化
 	unsigned long watermark[NR_WMARK];
 
 	unsigned long nr_reserved_highatomic;
@@ -436,6 +440,8 @@ struct zone {
 	unsigned long		spanned_pages;
 	unsigned long		present_pages;
 
+	//以NULL结束的字符串表示这个区的名字 
+	//"DMA" "Normal" "HighMen"
 	const char		*name;
 
 #ifdef CONFIG_MEMORY_ISOLATION
@@ -464,6 +470,7 @@ struct zone {
 	unsigned long		flags;
 
 	/* Primarily protects free_area */
+	//自旋锁 防止该结构被并发访问
 	spinlock_t		lock;
 
 	/* Write-intensive fields used by compaction and vmstats. */

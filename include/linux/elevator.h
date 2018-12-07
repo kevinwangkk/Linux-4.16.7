@@ -59,26 +59,37 @@ typedef int (elevator_init_fn) (struct request_queue *,
 typedef void (elevator_exit_fn) (struct elevator_queue *);
 typedef void (elevator_registered_fn) (struct request_queue *);
 
+//电梯算法 IO调度具体操作方法
+
 struct elevator_ops
 {
+	//将bio插入到request链表的首部
 	elevator_merge_fn *elevator_merge_fn;
+	//执行插入bio之后的一些附加操作
 	elevator_merged_fn *elevator_merged_fn;
+	//合并两个request操作
 	elevator_merge_req_fn *elevator_merge_req_fn;
+	//判断bio是否合并到request中
 	elevator_allow_bio_merge_fn *elevator_allow_bio_merge_fn;
 	elevator_allow_rq_merge_fn *elevator_allow_rq_merge_fn;
 	elevator_bio_merged_fn *elevator_bio_merged_fn;
 
+	//在队列中取出合适的request
 	elevator_dispatch_fn *elevator_dispatch_fn;
+	//向队列中插入一个新的request
 	elevator_add_req_fn *elevator_add_req_fn;
 	elevator_activate_req_fn *elevator_activate_req_fn;
 	elevator_deactivate_req_fn *elevator_deactivate_req_fn;
 
+	//请求完成时进行的一些操作
 	elevator_completed_req_fn *elevator_completed_req_fn;
 
 	elevator_request_list_fn *elevator_former_req_fn;
 	elevator_request_list_fn *elevator_latter_req_fn;
 
+	//初始化操作
 	elevator_init_icq_fn *elevator_init_icq_fn;	/* see iocontext.h */
+	//退出操作
 	elevator_exit_icq_fn *elevator_exit_icq_fn;	/* ditto */
 
 	elevator_set_req_fn *elevator_set_req_fn;
@@ -131,19 +142,29 @@ struct elv_fs_entry {
 /*
  * identifies an elevator type, such as AS or deadline
  */
+// elevator_type描述IO调度算法对象(电梯调度算法)
+
 struct elevator_type
 {
 	/* managed by elevator core */
+	//IO调度算法使用的高速缓存对象
 	struct kmem_cache *icq_cache;
 
 	/* fields provided by elevator implementation */
 	union {
-		struct elevator_ops sq;
-		struct elevator_mq_ops mq;
+		//IO调度操作方法
+		struct elevator_ops sq;  //单个队列
+		struct elevator_mq_ops mq;  //多个队列
 	} ops;
-	size_t icq_size;	/* see iocontext.h */
+
+	//高速缓存对象的大小  	  icq_align 对齐方式
+	size_t icq_size;	/* see iocontext.h */ //IO-context 主要用于将IO请求和IO请求队列关联起来
 	size_t icq_align;	/* ditto */
+
+	//用于在虚拟文件系统中动态显示调度算法的状态信息
 	struct elv_fs_entry *elevator_attrs;
+	
+	//描述了调度算法的名称
 	char elevator_name[ELV_NAME_MAX];
 	const char *elevator_alias;
 	struct module *elevator_owner;
@@ -154,6 +175,7 @@ struct elevator_type
 #endif
 
 	/* managed by elevator core */
+	//高速缓存对象名称
 	char icq_cache_name[ELV_NAME_MAX + 6];	/* elvname + "_io_cq" */
 	struct list_head list;
 };
@@ -168,10 +190,14 @@ struct request *elv_rqhash_find(struct request_queue *q, sector_t offset);
 /*
  * each queue has an elevator_queue associated with it
  */
+ 
+//每个请求队列都有一个与之关联的 elevator_queue
 struct elevator_queue
 {
 	struct elevator_type *type;
 	void *elevator_data;
+	//IO调度算法是作为内核对象存在的，
+	//	这样内核可以通过 sysfs 文件系统向用户提供一些状态信息
 	struct kobject kobj;
 	struct mutex sysfs_lock;
 	unsigned int registered:1;

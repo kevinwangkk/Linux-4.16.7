@@ -22,9 +22,11 @@ struct vfsmount;
 struct dentry;
 struct mnt_namespace;
 
-#define MNT_NOSUID	0x01
-#define MNT_NODEV	0x02
-#define MNT_NOEXEC	0x04
+//vfsmount.flag 取值
+
+#define MNT_NOSUID	0x01		//在已安装文件系统中禁止setuid 和 setgid标志
+#define MNT_NODEV	0x02		//在已安装文件系统中禁止访问设备文件
+#define MNT_NOEXEC	0x04		//在已安装文件系统中不允许程序执行
 #define MNT_NOATIME	0x08
 #define MNT_NODIRATIME	0x10
 #define MNT_RELATIME	0x20
@@ -64,9 +66,16 @@ struct mnt_namespace;
 #define MNT_MARKED		0x4000000
 #define MNT_UMOUNT		0x8000000
 
+//文件系统安装
+//2.6版本 struct vfsmount 是vfsmount 和 mount 组成
+//4.16.7版本 将vfsmount细分一层mount 抽象出来vfsmount
+
 struct vfsmount {
+	//指向这个文件系统根目录的dentry
 	struct dentry *mnt_root;	/* root of the mounted tree */
+	//指向这个文件系统的超级块对象
 	struct super_block *mnt_sb;	/* pointer to superblock */
+	//已安装文件系统的标志
 	int mnt_flags;
 } __randomize_layout;
 

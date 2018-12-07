@@ -200,6 +200,8 @@ static void drop_mountpoint(struct fs_pin *p)
 	mntput(&m->mnt);
 }
 
+//分配和初始化一个已安装文件系统描述符
+
 static struct mount *alloc_vfsmnt(const char *name)
 {
 	struct mount *mnt = kmem_cache_zalloc(mnt_cache, GFP_KERNEL);
@@ -635,6 +637,8 @@ int sb_prepare_remount_readonly(struct super_block *sb)
 	return err;
 }
 
+//释放由mnt指向的已安装文件描述符
+
 static void free_vfsmnt(struct mount *mnt)
 {
 	kfree_const(mnt->mnt_devname);
@@ -686,6 +690,9 @@ bool legitimize_mnt(struct vfsmount *bastard, unsigned seq)
  * find the first mount at @dentry on vfsmount @mnt.
  * call under rcu_read_lock()
  */
+
+//在散列表中查找一个描述符并返回它的地址
+
 struct mount *__lookup_mnt(struct vfsmount *mnt, struct dentry *dentry)
 {
 	struct hlist_head *head = m_hash(mnt, dentry);
@@ -1027,6 +1034,7 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
 	if (!type)
 		return ERR_PTR(-ENODEV);
 
+	//分配一个新的已安装文件系统的描述符
 	mnt = alloc_vfsmnt(name);
 	if (!mnt)
 		return ERR_PTR(-ENOMEM);
@@ -2449,6 +2457,9 @@ static struct vfsmount *fs_set_subtype(struct vfsmount *mnt, const char *fstype)
 /*
  * add a mount into a namespace's mount tree
  */
+
+//添加一个mount到命名空间的mount树中
+
 static int do_add_mount(struct mount *newmnt, struct path *path, int mnt_flags)
 {
 	struct mountpoint *mp;
@@ -2496,6 +2507,9 @@ static bool mount_too_revealing(struct vfsmount *mnt, int *new_mnt_flags);
  * create a new mount for userspace and request it to be added into the
  * namespace's tree
  */
+
+//安装一个特殊文件系统或存放在磁盘分区中的普通文件系统时调用
+
 static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
 			int mnt_flags, const char *name, void *data)
 {
@@ -2510,6 +2524,8 @@ static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
 	if (!type)
 		return -ENODEV;
 
+	//传递的参数为文件系统类型,安装标志以及块设备名.
+	//并返回一个新安装文件系统描述符的地址
 	mnt = vfs_kern_mount(type, sb_flags, name, data);
 	if (!IS_ERR(mnt) && (type->fs_flags & FS_HAS_SUBTYPE) &&
 	    !mnt->mnt_sb->s_subtype)
@@ -2524,6 +2540,7 @@ static int do_new_mount(struct path *path, const char *fstype, int sb_flags,
 		return -EPERM;
 	}
 
+	////添加一个mount到命名空间的mount树中
 	err = do_add_mount(real_mount(mnt), path, mnt_flags);
 	if (err)
 		mntput(mnt);
@@ -2831,15 +2848,20 @@ long do_mount(const char *dev_name, const char __user *dir_name,
 			    SB_I_VERSION);
 
 	if (flags & MS_REMOUNT)
+		//改变超级块对象s_flags字段的安装标志, 
+		//以及已安装文件系统对象mnt_flags字段的安装文件系统标志
 		retval = do_remount(&path, flags, sb_flags, mnt_flags,
 				    data_page);
 	else if (flags & MS_BIND)
+		//在系统目录树的另一个安装点上的文件或目录能够可以见
 		retval = do_loopback(&path, dev_name, flags & MS_REC);
 	else if (flags & (MS_SHARED | MS_PRIVATE | MS_SLAVE | MS_UNBINDABLE))
 		retval = do_change_type(&path, flags);
 	else if (flags & MS_MOVE)
+		//改变已安装文件系统的安装点
 		retval = do_move_mount(&path, dev_name);
 	else
+		//安装一个特殊文件系统或存放在磁盘分区中的普通文件系统时调用
 		retval = do_new_mount(&path, type_page, sb_flags, mnt_flags,
 				      dev_name, data_page);
 dput_out:
@@ -3033,6 +3055,8 @@ struct dentry *mount_subtree(struct vfsmount *mnt, const char *name)
 }
 EXPORT_SYMBOL(mount_subtree);
 
+//mount()系统调用实现
+
 SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
 		char __user *, type, unsigned long, flags, void __user *, data)
 {
@@ -3056,6 +3080,7 @@ SYSCALL_DEFINE5(mount, char __user *, dev_name, char __user *, dir_name,
 	if (IS_ERR(options))
 		goto out_data;
 
+	//mount()系统调用真正处理函数 do_mount()
 	ret = do_mount(kernel_dev, dir_name, kernel_type, flags, options);
 
 	kfree(options);
@@ -3117,6 +3142,9 @@ EXPORT_SYMBOL(path_is_under);
  *    though, so you may need to say mount --bind /nfs/my_root /nfs/my_root
  *    first.
  */
+
+//进程可以通过linux特有的pivot_root()系统调用来改变它的命名空间的根文件系统
+
 SYSCALL_DEFINE2(pivot_root, const char __user *, new_root,
 		const char __user *, put_old)
 {

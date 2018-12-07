@@ -1977,18 +1977,20 @@ void __init inode_init(void)
 					0);
 }
 
+
+//将inode与具体的文件操作相关联
 void init_special_inode(struct inode *inode, umode_t mode, dev_t rdev)
 {
 	inode->i_mode = mode;
-	if (S_ISCHR(mode)) {
+	if (S_ISCHR(mode)) {  //字符设备文件
 		inode->i_fop = &def_chr_fops;
 		inode->i_rdev = rdev;
-	} else if (S_ISBLK(mode)) {
+	} else if (S_ISBLK(mode)) {  //块设备文件
 		inode->i_fop = &def_blk_fops;
 		inode->i_rdev = rdev;
-	} else if (S_ISFIFO(mode))
+	} else if (S_ISFIFO(mode))  //管道设备文件
 		inode->i_fop = &pipefifo_fops;
-	else if (S_ISSOCK(mode))
+	else if (S_ISSOCK(mode))  //socket文件 用于进程间通信(IPC)
 		;	/* leave it no_open_fops */
 	else
 		printk(KERN_DEBUG "init_special_inode: bogus i_mode (%o) for"

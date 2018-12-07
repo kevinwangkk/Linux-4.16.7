@@ -1,6 +1,6 @@
 #
 # Linux system call numbers and entry vectors
-#
+# 系统调用号和入口向量
 # The format is:
 # <num>	<abi>	<name>			[<entry point>			[<oabi compat entry point>]]
 #

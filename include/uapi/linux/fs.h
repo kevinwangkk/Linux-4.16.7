@@ -105,19 +105,37 @@ struct inodes_stat_t {
 /*
  * These are the fs-independent mount-flags: up to 32 flags are supported
  */
+
+//mount()系统调用使用的安装标志
+
+//文件只能被读
 #define MS_RDONLY	 1	/* Mount read-only */
+//禁止setuid和setgid标志
 #define MS_NOSUID	 2	/* Ignore suid and sgid bits */
+//禁止访问设备文件
 #define MS_NODEV	 4	/* Disallow access to device special files */
+//不允许程序执行
 #define MS_NOEXEC	 8	/* Disallow program execution */
+//文件和目录上的写操作是即时的
 #define MS_SYNCHRONOUS	16	/* Writes are synced at once */
+//重新安装改变了安装标志的文件系统
 #define MS_REMOUNT	32	/* Alter flags of a mounted FS */
+//允许强制加锁
 #define MS_MANDLOCK	64	/* Allow mandatory locks on an FS */
+//目录上的写操作是即时的
 #define MS_DIRSYNC	128	/* Directory modifications are synchronous */
+//不更新文件访问时间
 #define MS_NOATIME	1024	/* Do not update access times. */
+//不更新目录访问时间
 #define MS_NODIRATIME	2048	/* Do not update directory access times */
+//创建一个"绑定安装", 这就使得一个文件或目录在系统目录树
+//的另外一个点上可以看得见(mount命令的__bind选项)
 #define MS_BIND		4096
+//自动把一个已安装文件系统移动到另一个安装点(mount命令的__move选项)
 #define MS_MOVE		8192
+//为目录子树递归创建"绑定安装"
 #define MS_REC		16384
+//在安装出错时产生内核消息
 #define MS_VERBOSE	32768	/* War is peace. Verbosity is silence.
 				   MS_VERBOSE is deprecated. */
 #define MS_SILENT	32768

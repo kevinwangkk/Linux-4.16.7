@@ -23,7 +23,7 @@ raw_copy_to_user(void __user *to, const void *from, unsigned long n)
 static __always_inline unsigned long
 raw_copy_from_user(void *to, const void __user *from, unsigned long n)
 {
-	if (__builtin_constant_p(n)) {
+	if (__builtin_constant_p(n)) {  //gcc内建函数 check n是否为常数
 		unsigned long ret;
 
 		switch (n) {

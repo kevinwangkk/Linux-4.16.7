@@ -98,13 +98,20 @@ struct blk_issue_stat {
  * main unit of I/O for the block layer and lower layers (ie drivers and
  * stacking drivers)
  */
+
+//块I/O操作的基本容器由bio结构体表示
+//该结构体代表了正在现场的(活动的)以片段(segment)链表形式组织的块I/O操作
+//一个片段是一小块连续的内存缓冲区 (这样就不用考虑单个缓冲区一定要连续的问题)
+//用片段来描述缓冲区[buffer_head] (一个缓冲区分散在内存的多个位置上)
 struct bio {
+	//请求链表
 	struct bio		*bi_next;	/* request queue link */
 	struct gendisk		*bi_disk;
 	unsigned int		bi_opf;		/* bottom bits req flags,
 						 * top bits REQ_OP. Use
 						 * accessors.
 						 */
+	//状态和命令标志
 	unsigned short		bi_flags;	/* status, etc and bvec pool number */
 	unsigned short		bi_ioprio;
 	unsigned short		bi_write_hint;
@@ -114,20 +121,26 @@ struct bio {
 	/* Number of segments in this BIO after
 	 * physical address coalescing is performed.
 	 */
+	//结合后的片段数目
 	unsigned int		bi_phys_segments;
 
 	/*
 	 * To keep track of the max segment size, we account for the
 	 * sizes of the first and last mergeable segments in this bio.
 	 */
+	 //第一个可合并的段大小
 	unsigned int		bi_seg_front_size;
+	//最后一个可合并的段大小
 	unsigned int		bi_seg_back_size;
 
+	//bvec的属性信息 如bi_sector bi_idx
 	struct bvec_iter	bi_iter;
 
 	atomic_t		__bi_remaining;
+	//I/O完成方法
 	bio_end_io_t		*bi_end_io;
 
+	//拥有者的私有方法 
 	void			*bi_private;
 #ifdef CONFIG_BLK_CGROUP
 	/*
@@ -147,16 +160,20 @@ struct bio {
 #endif
 	};
 
+	//bio_vecs偏移的个数
 	unsigned short		bi_vcnt;	/* how many bio_vec's */
 
 	/*
 	 * Everything starting with bi_max_vecs will be preserved by bio_reset()
 	 */
 
+	//bio_vecs最大数目
 	unsigned short		bi_max_vecs;	/* max bvl_vecs we can hold */
 
+	//记录bio结构体的使用计数, 该值为0 , 释放bio占用的内存
 	atomic_t		__bi_cnt;	/* pin count */
 
+	//bio_vecs链表 bio_vec结构体描述页面信息
 	struct bio_vec		*bi_io_vec;	/* the actual vec list */
 
 	struct bio_set		*bi_pool;
@@ -166,7 +183,8 @@ struct bio {
 	 * double allocations for a small number of bio_vecs. This member
 	 * MUST obviously be kept at the very end of the bio.
 	 */
-	struct bio_vec		bi_inline_vecs[0];
+	//内嵌bio向量 //<page, offset, len>的向量
+	struct bio_vec		bi_inline_vecs[0];  
 };
 
 #define BIO_RESET_BYTES		offsetof(struct bio, bi_max_vecs)

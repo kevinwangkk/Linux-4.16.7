@@ -17,28 +17,44 @@
 
 #ifdef CONFIG_BLOCK
 
+//buffer_head.b_state的取值范围
+//缓冲区状态标志
 enum bh_state_bits {
+	//该缓冲区包含可用数据
 	BH_Uptodate,	/* Contains valid data */
+	//该缓冲区是脏的(缓存中内容比磁盘中的块内容新, 所以缓冲区内容必须被写回磁盘)
 	BH_Dirty,	/* Is dirty */
+	//该缓冲区正在被I/O操作使用, 被锁定以防被并发访问
 	BH_Lock,	/* Is locked */
+	//该缓冲区有I/O请求操作
 	BH_Req,		/* Has been submitted for I/O */
 	BH_Uptodate_Lock,/* Used by the first bh in a page, to serialise
 			  * IO completion of other buffers in the page
 			  */
 
+	//该缓冲区是映射磁盘块的可用缓冲区
 	BH_Mapped,	/* Has a disk mapping */
+	//缓冲区是通过get_block()刚刚映射的, 尚且不能访问
 	BH_New,		/* Disk mapping was newly created by get_block */
+	//该缓冲区正通过end_buffer_async_read()被异步I/O读操作使用
 	BH_Async_Read,	/* Is under end_buffer_async_read I/O */
+	//该缓冲区正通过end_buffer_async_write()被异步I/O写操作使用
 	BH_Async_Write,	/* Is under end_buffer_async_write I/O */
+	//该缓冲区尚未和磁盘块关联
 	BH_Delay,	/* Buffer is not yet allocated on disk */
+	//该缓冲区处于连续块区的边界---下一个块不再连续
 	BH_Boundary,	/* Block is followed by a discontiguity */
+	//该缓冲区在写的时候遇到I/O错误
 	BH_Write_EIO,	/* I/O error on write */
+	//该缓冲区在硬盘上的空间已被申请但是没有实际的数据写出
 	BH_Unwritten,	/* Buffer is allocated on disk but not written */
+	//该缓冲区禁止错误
 	BH_Quiet,	/* Buffer Error Prinks to be quiet */
 	BH_Meta,	/* Buffer contains metadata */
 	BH_Prio,	/* Buffer should be submitted with REQ_PRIO */
 	BH_Defer_Completion, /* Defer AIO completion to workqueue */
 
+	//不可用状态标志 (最大的位,不会有超过这个位的值)
 	BH_PrivateStart,/* not a state bit, but the first bit available
 			 * for private allocation by other entities
 			 */
@@ -60,21 +76,41 @@ typedef void (bh_end_io_t)(struct buffer_head *bh, int uptodate);
  * a page (via a page_mapping) and for wrapping bio submission
  * for backward compatibility reasons (e.g. submit_bh).
  */
+
+//块被调入内存(读入后或等待写出时)时, 要存储在一个缓冲区中
+//内核处理数据需要一些相关的控制信息, 每个缓冲区对应一个buffer_head, 描述符(控制信息)存在缓冲区头中
+//此描述符(结构体)说明缓冲区(页面)到块的映射关系
+
 struct buffer_head {
+//页面信息
+	//缓冲区状态标志
 	unsigned long b_state;		/* buffer state bitmap (see above) */
+	//页面中的缓冲区
 	struct buffer_head *b_this_page;/* circular list of page's buffers */
+	//存储缓冲区的页面(缓冲区对应的内存物理页由b_page表示)
 	struct page *b_page;		/* the page this bh is mapped to */
 
+//块信息
+	//起始块号
 	sector_t b_blocknr;		/* start block number */
+	//块的大小
 	size_t b_size;			/* size of mapping */
+	//页面内的数据指针(位于b_page字段所指明的页面中的某个位置上)
+	//块在内存中的起始位置在b_data处, 结束位置在(b_data + b_size)处
 	char *b_data;			/* pointer to data within the page */
 
+	//相关联的块设备
 	struct block_device *b_bdev;
+	//I/O完成方法
 	bh_end_io_t *b_end_io;		/* I/O completion */
- 	void *b_private;		/* reserved for b_end_io */
+	//io完成方法
+	void *b_private;		/* reserved for b_end_io */
+	//相关的映射链表
 	struct list_head b_assoc_buffers; /* associated with another mapping */
+	//相关的地址空间
 	struct address_space *b_assoc_map;	/* mapping this buffer is
 						   associated with */
+	//缓冲区的使用计数
 	atomic_t b_count;		/* users using this buffer_head */
 };
 
@@ -280,11 +316,13 @@ static inline void attach_page_buffers(struct page *page,
 	set_page_private(page, (unsigned long)head);
 }
 
+//增加块IO层缓冲区的计数
 static inline void get_bh(struct buffer_head *bh)
 {
         atomic_inc(&bh->b_count);
 }
 
+//减少块IO层缓冲区的计数
 static inline void put_bh(struct buffer_head *bh)
 {
         smp_mb__before_atomic();

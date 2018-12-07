@@ -23,6 +23,8 @@ static const int writes_starved = 2;    /* max times reads can starve a write */
 static const int fifo_batch = 16;       /* # of sequential requests treated as one
 				     by the above parameters. For throughput. */
 
+//Deadline 确保了在一个截止时间内服务请求,这个截止时间是可调整的,
+//而默认读期限短于写期限.这样就防止了写操作因为不能被读取而饿死的现象. 
 struct deadline_data {
 	/*
 	 * run time data
@@ -524,6 +526,7 @@ static struct elv_fs_entry deadline_attrs[] = {
 	__ATTR_NULL
 };
 
+//deadline调度算法 操作方法
 static struct elevator_type iosched_deadline = {
 	.ops.sq = {
 		.elevator_merge_fn = 		deadline_merge,

@@ -4,11 +4,13 @@
 
 #include <uapi/linux/kdev_t.h>
 
-#define MINORBITS	20
-#define MINORMASK	((1U << MINORBITS) - 1)
+// 主次设备号 高12位主设备号 低20位次设备号
 
-#define MAJOR(dev)	((unsigned int) ((dev) >> MINORBITS))
-#define MINOR(dev)	((unsigned int) ((dev) & MINORMASK))
+#define MINORBITS	20
+#define MINORMASK	((1U << MINORBITS) - 1) //000111111111...
+
+#define MAJOR(dev)	((unsigned int) ((dev) >> MINORBITS))  //获取主设备号
+#define MINOR(dev)	((unsigned int) ((dev) & MINORMASK))   //获取次设备号
 #define MKDEV(ma,mi)	(((ma) << MINORBITS) | (mi))
 
 #define print_dev_t(buffer, dev)					\

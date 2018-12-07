@@ -281,6 +281,7 @@ struct ext4_group_desc * ext4_get_group_desc(struct super_block *sb,
 {
 	unsigned int group_desc;
 	unsigned int offset;
+	//获取块组数
 	ext4_group_t ngroups = ext4_get_groups_count(sb);
 	struct ext4_group_desc *desc;
 	struct ext4_sb_info *sbi = EXT4_SB(sb);

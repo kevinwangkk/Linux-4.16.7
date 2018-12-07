@@ -67,7 +67,10 @@ static struct file_system_type **find_filesystem(const char *name, unsigned len)
  *	structures and must not be freed until the file system has been
  *	unregistered.
  */
- 
+
+//系统初始化时, 调用该函数来注册编译时指定的每个文件系统,
+//将相应的file_system_type对象插入到文件系统类型的链表中
+
 int register_filesystem(struct file_system_type * fs)
 {
 	int res = 0;
@@ -99,7 +102,9 @@ EXPORT_SYMBOL(register_filesystem);
  *	Once this function has returned the &struct file_system_type structure
  *	may be freed or reused.
  */
- 
+
+//卸载文件系统
+
 int unregister_filesystem(struct file_system_type * fs)
 {
 	struct file_system_type ** tmp;
@@ -269,6 +274,9 @@ static struct file_system_type *__get_fs_type(const char *name, int len)
 	read_unlock(&file_systems_lock);
 	return fs;
 }
+
+//扫描已注册的文件系统链表以查找文件系统类型的name字段, 
+//并返回指向相应的file_system_type对象的指针
 
 struct file_system_type *get_fs_type(const char *name)
 {

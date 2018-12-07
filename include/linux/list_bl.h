@@ -30,6 +30,8 @@
 #define LIST_BL_BUG_ON(x)
 #endif
 
+//特殊链表
+//带锁的扩展散列链表
 
 struct hlist_bl_head {
 	struct hlist_bl_node *first;

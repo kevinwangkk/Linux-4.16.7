@@ -27,21 +27,35 @@
 /*
  * was unsigned short, but we might as well be ready for > 64kB I/O pages
  */
+
+//I/O向量 <page, offset, len>的向量
+//描述物理页信息
+
 struct bio_vec {
+	//指向这个缓冲区所驻留的物理页
 	struct page	*bv_page;
+	//这个缓冲区以字节为单位的大小
 	unsigned int	bv_len;
+	//缓冲区所驻留的页中以字节为单位的偏移量
 	unsigned int	bv_offset;
 };
 
+//bvec的属性信息
+
 struct bvec_iter {
+	//磁盘上的相关扇区
 	sector_t		bi_sector;	/* device address in 512 byte
 						   sectors */
+	//I/O计数
 	unsigned int		bi_size;	/* residual I/O count */
 
+	//bio_io_vect的当前索引
 	unsigned int		bi_idx;		/* current index into bvl_vec */
 
+	//已完成的字节数
 	unsigned int            bi_done;	/* number of bytes completed */
 
+	//在当前 bvec 中完成的字节数
 	unsigned int            bi_bvec_done;	/* number of bytes completed in
 						   current bvec */
 };

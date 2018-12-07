@@ -23,10 +23,16 @@
  */
 #define NR_OPEN_DEFAULT BITS_PER_LONG
 
+//files_struct字段中的fdtable
+
 struct fdtable {
+	//文件对象的当前最大数目
 	unsigned int max_fds;
+	//指向文件对象指针数据的指针
 	struct file __rcu **fd;      /* current fd array */
+	//指向执行exec()时需要关闭的文件描述符的指针
 	unsigned long *close_on_exec;
+	//指向打开文件描述符的初始化集合
 	unsigned long *open_fds;
 	unsigned long *full_fds_bits;
 	struct rcu_head rcu;
@@ -45,10 +51,15 @@ static inline bool fd_is_open(unsigned int fd, const struct fdtable *fdt)
 /*
  * Open file table structure
  */
+
+//表示进程当前打开的文件
+//files_struct的地址存放在进程描述符的files字段
+
 struct files_struct {
   /*
    * read mostly part
    */
+	//共享该表的进程数目
 	atomic_t count;
 	bool resize_in_progress;
 	wait_queue_head_t resize_wait;
@@ -59,10 +70,14 @@ struct files_struct {
    * written part on a separate cache line in SMP
    */
 	spinlock_t file_lock ____cacheline_aligned_in_smp;
+	//所分配的最大文件描述符加 1
 	unsigned int next_fd;
+	//执行exec()时需要关闭的文件描述符的初始化集合
 	unsigned long close_on_exec_init[1];
+	//文件描述符的初始集合
 	unsigned long open_fds_init[1];
 	unsigned long full_fds_bits_init[1];
+	//文件对象指针的初始化数组
 	struct file __rcu * fd_array[NR_OPEN_DEFAULT];
 };
 

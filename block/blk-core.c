@@ -915,7 +915,7 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
 		goto fail_stats;
 
 	q->backing_dev_info->ra_pages =
-			(VM_MAX_READAHEAD * 1024) / PAGE_SIZE;
+			(VM_MAX_READAHEAD * 1024) / PAGE_SIZE;  //32
 	q->backing_dev_info->capabilities = BDI_CAP_CGROUP_WRITEBACK;
 	q->backing_dev_info->name = "block";
 	q->node = node_id;
@@ -1896,6 +1896,15 @@ void blk_init_request_from_bio(struct request *req, struct bio *bio)
 }
 EXPORT_SYMBOL_GPL(blk_init_request_from_bio);
 
+/*
+alloc_disk
+blk_init_queue
+add-disk
+
+*/
+
+//此函数对它进行赋值: request_queue->make_request_fn
+
 static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
 {
 	struct blk_plug *plug;
@@ -1934,12 +1943,14 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
 
 	spin_lock_irq(q->queue_lock);
 
-	switch (elv_merge(q, &req, bio)) {
+	//
+	switch (elv_merge(q, &req, bio)) {  //查询一次能否合并
+		//一个是返回值 ,还有一个req
 	case ELEVATOR_BACK_MERGE:
 		if (!bio_attempt_back_merge(q, req, bio))
 			break;
-		elv_bio_merged(q, req, bio);
-		free = attempt_back_merge(q, req);
+		elv_bio_merged(q, req, bio);  //bio 到->请求合并
+		free = attempt_back_merge(q, req);  //前后两个req合并
 		if (free)
 			__blk_put_request(q, free);
 		else
@@ -1949,7 +1960,7 @@ static blk_qc_t blk_queue_bio(struct request_queue *q, struct bio *bio)
 		if (!bio_attempt_front_merge(q, req, bio))
 			break;
 		elv_bio_merged(q, req, bio);
-		free = attempt_front_merge(q, req);
+		free = attempt_front_merge(q, req);  ////前后两个req合并
 		if (free)
 			__blk_put_request(q, free);
 		else
@@ -2314,6 +2325,13 @@ blk_qc_t generic_make_request(struct bio *bio)
 	 * task or not.  If it is NULL, then no make_request is active.  If
 	 * it is non-NULL, then a make_request is active, and new requests
 	 * should be added at the tail
+	 我们只希望一 >> make_request_fn 是活跃的一次, 
+	 否则堆栈使用堆叠的设备可能是一个问题。
+	 因此, 使用当前 >> bio_list 来保留由 make_request_fn 函数提交的请求列表。 
+	 当前 >> bio_list 也用作标志, 
+	 以表示 generic_make_request 当前是否在该任务中处于活动状态。 
+	 如果它为 NULL, 则没有 make_request 处于活动状态。 如果它是非空的, 
+	 则 make_request 处于活动状态, 并应在尾部添加新请求
 	 */
 	if (current->bio_list) {
 		bio_list_add(&current->bio_list[0], bio);

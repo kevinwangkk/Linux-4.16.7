@@ -100,6 +100,7 @@ int proc_nr_files(struct ctl_table *table, int write,
  * done, you will imbalance int the mount's writer count
  * and a warning at __fput() time.
  */
+ //分配文件对象
 struct file *get_empty_filp(void)
 {
 	const struct cred *cred = current_cred();
@@ -119,6 +120,7 @@ struct file *get_empty_filp(void)
 			goto over;
 	}
 
+	//从filp高速缓存中获取一个空闲的文件对象
 	f = kmem_cache_zalloc(filp_cachep, GFP_KERNEL);
 	if (unlikely(!f))
 		return ERR_PTR(-ENOMEM);
@@ -155,11 +157,13 @@ over:
  * @mode: the mode with which the new file will be opened
  * @fop: the 'struct file_operations' for the new file
  */
+//VFS代表进程打开一个文件
 struct file *alloc_file(const struct path *path, fmode_t mode,
 		const struct file_operations *fop)
 {
 	struct file *file;
 
+	//分配一个新的文件对象
 	file = get_empty_filp();
 	if (IS_ERR(file))
 		return file;

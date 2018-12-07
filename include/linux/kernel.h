@@ -83,9 +83,15 @@
  * as wide as the result!), and we want to evaluate the macro
  * arguments just once each.
  */
+//内存管理中普遍使用
 #define __round_mask(x, y) ((__typeof__(x))((y)-1))
+//向上对齐取整 x对y向上对齐
 #define round_up(x, y) ((((x)-1) | __round_mask(x, y))+1)
+//向下对齐取整
 #define round_down(x, y) ((x) & ~__round_mask(x, y))
+
+//roundup(0x1234,0x1000)的结果为 0x2000，
+//而宏 rounddown(0x1234,0x1000)的结果为 0x1000
 
 /**
  * FIELD_SIZEOF - get the size of a struct's field
@@ -926,6 +932,19 @@ static inline void ftrace_dump(enum ftrace_dump_mode oops_dump_mode) { }
  * @member:	the name of the member within the struct.
  *
  */
+ 
+/*
+指针 ptr 是成员member的地址，也就是链表成员的地址，
+类型 type 是成员member嵌入的结构类型, 结构体类型，
+member 就是链表在结构type中的名称。
+宏返回的是嵌入的结构首地址
+
+#define container_of(ptr, type, member) ({        \ 
+        const typeof( ((type *)0)->member ) *__mptr = (ptr);        \ 
+        (type *)( (char *)__mptr - offsetof(type,member) );}) 
+
+*/
+	
 #define container_of(ptr, type, member) ({				\
 	void *__mptr = (void *)(ptr);					\
 	BUILD_BUG_ON_MSG(!__same_type(*(ptr), ((type *)0)->member) &&	\

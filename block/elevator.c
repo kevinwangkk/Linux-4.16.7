@@ -55,6 +55,7 @@ static LIST_HEAD(elv_list);
  * Query io scheduler to see if the current process issuing bio may be
  * merged with rq.
  */
+ //
 static int elv_iosched_allow_bio_merge(struct request *rq, struct bio *bio)
 {
 	struct request_queue *q = rq->q;
@@ -171,6 +172,7 @@ void __init load_default_elevator_module(void)
 
 static struct kobj_type elv_ktype;
 
+//blk_init_queue中调用此函数
 struct elevator_queue *elevator_alloc(struct request_queue *q,
 				  struct elevator_type *e)
 {
@@ -199,6 +201,9 @@ static void elevator_release(struct kobject *kobj)
 	kfree(e);
 }
 
+//blk_init_queue调用此函数
+
+//对IO调度程序初始化, 进行配置
 int elevator_init(struct request_queue *q, char *name)
 {
 	struct elevator_type *e = NULL;
@@ -218,6 +223,8 @@ int elevator_init(struct request_queue *q, char *name)
 	q->end_sector = 0;
 	q->boundary_rq = NULL;
 
+	//函数会为参数 q 指定的请求队列设置名字为 name 的 IO 调度程序。
+	//如果name 为 NULL，则系统对请求队列设置默认的调度算法
 	if (name) {
 		e = elevator_get(q, name, true);
 		if (!e)
@@ -237,7 +244,7 @@ int elevator_init(struct request_queue *q, char *name)
 							chosen_elevator);
 	}
 
-	if (!e) {
+	if (!e) {   //mq 处理
 		/*
 		 * For blk-mq devices, we default to using mq-deadline,
 		 * if available, for single queue devices. If deadline
@@ -263,7 +270,7 @@ int elevator_init(struct request_queue *q, char *name)
 	if (e->uses_mq)
 		err = blk_mq_init_sched(q, e);
 	else
-		err = e->ops.sq.elevator_init_fn(q, e);
+		err = e->ops.sq.elevator_init_fn(q, e); //sq处理
 	if (err)
 		elevator_put(e);
 	return err;
@@ -296,6 +303,7 @@ void elv_rqhash_del(struct request_queue *q, struct request *rq)
 }
 EXPORT_SYMBOL_GPL(elv_rqhash_del);
 
+//哈希-便于快速查找
 void elv_rqhash_add(struct request_queue *q, struct request *rq)
 {
 	struct elevator_queue *e = q->elevator;
@@ -337,6 +345,7 @@ struct request *elv_rqhash_find(struct request_queue *q, sector_t offset)
  * RB-tree support functions for inserting/lookup/removal of requests
  * in a sorted RB tree.
  */
+ //红黑树
 void elv_rb_add(struct rb_root *root, struct request *rq)
 {
 	struct rb_node **p = &root->rb_node;
@@ -448,6 +457,7 @@ void elv_dispatch_add_tail(struct request_queue *q, struct request *rq)
 }
 EXPORT_SYMBOL(elv_dispatch_add_tail);
 
+//blk_queue_bio调用此函数
 enum elv_merge elv_merge(struct request_queue *q, struct request **req,
 		struct bio *bio)
 {
@@ -904,6 +914,7 @@ void elv_unregister_queue(struct request_queue *q)
 	}
 }
 
+//注册IO调度算法
 int elv_register(struct elevator_type *e)
 {
 	char *def = "";
@@ -924,13 +935,13 @@ int elv_register(struct elevator_type *e)
 
 	/* register, don't allow duplicate names */
 	spin_lock(&elv_list_lock);
-	if (elevator_find(e->elevator_name, e->uses_mq)) {
+	if (elevator_find(e->elevator_name, e->uses_mq)) {   //判断是否注册
 		spin_unlock(&elv_list_lock);
 		if (e->icq_cache)
 			kmem_cache_destroy(e->icq_cache);
 		return -EBUSY;
 	}
-	list_add_tail(&e->list, &elv_list);
+	list_add_tail(&e->list, &elv_list);    //将注册算法放入链表
 	spin_unlock(&elv_list_lock);
 
 	/* print pretty message */
@@ -945,6 +956,7 @@ int elv_register(struct elevator_type *e)
 }
 EXPORT_SYMBOL_GPL(elv_register);
 
+//卸载IO调度算法 从链表删除后，释放调度器使用的内存
 void elv_unregister(struct elevator_type *e)
 {
 	/* unregister */

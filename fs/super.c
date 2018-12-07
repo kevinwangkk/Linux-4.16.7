@@ -932,7 +932,7 @@ static DEFINE_SPINLOCK(unnamed_dev_lock);/* protects the above */
 /* Many userspace utilities consider an FSID of 0 invalid.
  * Always return at least 1 from get_anon_bdev.
  */
-static int unnamed_dev_start = 1;
+static int unnamed_dev_start = 1;  //未使用的次设备号
 
 int get_anon_bdev(dev_t *p)
 {
@@ -977,12 +977,17 @@ void free_anon_bdev(dev_t dev)
 }
 EXPORT_SYMBOL(free_anon_bdev);
 
+//用于初始化特殊文件系统的超级块
+//本质上获得一个未使用的次设备号dev, 将主次设备号放入到super_block中的s_dev字段
+
 int set_anon_super(struct super_block *s, void *data)
 {
 	return get_anon_bdev(&s->s_dev);
 }
 
 EXPORT_SYMBOL(set_anon_super);
+
+//移走特殊文件系统的超级块
 
 void kill_anon_super(struct super_block *sb)
 {

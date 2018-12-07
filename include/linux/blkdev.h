@@ -140,6 +140,11 @@ typedef __u32 __bitwise req_flags_t;
  * If you modify this structure, make sure to update blk_rq_init() and
  * especially blk_mq_rq_ctx_init() to take care of the added fields.
  */
+
+//请求队列中的每一项都是一个单独的请求, 由request结构体表示
+//每个请求可以由多个bio结构体组成
+//磁盘上的块必须连续, 但是内存中这些块并不一定要连续
+
 struct request {
 	struct request_queue *q;
 	struct blk_mq_ctx *mq_ctx;
@@ -433,12 +438,21 @@ static inline int blkdev_reset_zones_ioctl(struct block_device *bdev,
 
 #endif /* CONFIG_BLK_DEV_ZONED */
 
+//请求队列
+//块设备将挂起的块I/O请求保存在请求队列中
+//请求队列中的每一项都是一个单独的请求, 由request结构体表示
+/*
+	alloc_disk
+	blk_init_queue 分配请求队列
+	add_disk
+*/
 struct request_queue {
 	/*
 	 * Together with queue_head for cacheline sharing
 	 */
 	struct list_head	queue_head;
 	struct request		*last_merge;
+	//描述调度算法 算法与请求队列相关联
 	struct elevator_queue	*elevator;
 	int			nr_rqs[2];	/* # allocated [a]sync rqs */
 	int			nr_rqs_elvpriv;	/* # allocated rqs w/ elvpriv */
@@ -497,6 +511,7 @@ struct request_queue {
 	 */
 	struct delayed_work	delay_work;
 
+	//回写数据
 	struct backing_dev_info	*backing_dev_info;
 
 	/*

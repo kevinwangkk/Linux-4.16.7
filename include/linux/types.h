@@ -183,7 +183,7 @@ typedef struct {
 } atomic64_t;
 #endif
 
-// wangkaiwen 
+// 双向循环链表
 struct list_head {
 	struct list_head *next, *prev;
 };
@@ -192,6 +192,7 @@ struct hlist_head {
 	struct hlist_node *first;
 };
 
+// 散列链表
 struct hlist_node {
 	struct hlist_node *next, **pprev;
 };

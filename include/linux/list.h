@@ -64,6 +64,13 @@ static inline void __list_add(struct list_head *new,
 	new->next = next;
 	new->prev = prev;
 	WRITE_ONCE(prev->next, new);
+
+	/*
+	next->prev = new; 
+	new->next = next; 
+	new->prev = prev; 
+	prev->next = new; 
+	*/
 }
 
 /**
@@ -74,6 +81,7 @@ static inline void __list_add(struct list_head *new,
  * Insert a new entry after the specified head.
  * This is good for implementing stacks.
  */
+  //将new插入到head之后
 static inline void list_add(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head, head->next);
@@ -88,6 +96,7 @@ static inline void list_add(struct list_head *new, struct list_head *head)
  * Insert a new entry before the specified head.
  * This is useful for implementing queues.
  */
+  //将new插入到head之前
 static inline void list_add_tail(struct list_head *new, struct list_head *head)
 {
 	__list_add(new, head->prev, head);
@@ -120,6 +129,7 @@ static inline void __list_del_entry(struct list_head *entry)
 	__list_del(entry->prev, entry->next);
 }
 
+//删除元素
 static inline void list_del(struct list_head *entry)
 {
 	__list_del_entry(entry);
@@ -134,6 +144,7 @@ static inline void list_del(struct list_head *entry)
  *
  * If @old was empty, it will be overwritten.
  */
+ //了对链表中元素的替换。即把原来的元素删除，新的节点加入到这个位置
 static inline void list_replace(struct list_head *old,
 				struct list_head *new)
 {
@@ -143,6 +154,7 @@ static inline void list_replace(struct list_head *old,
 	new->prev->next = new;
 }
 
+//把链表节点替换后并对替换掉的节点重新初始化
 static inline void list_replace_init(struct list_head *old,
 					struct list_head *new)
 {
@@ -154,6 +166,7 @@ static inline void list_replace_init(struct list_head *old,
  * list_del_init - deletes entry from list and reinitialize it.
  * @entry: the element to delete from the list.
  */
+//对删除的元素重新初始化 
 static inline void list_del_init(struct list_head *entry)
 {
 	__list_del_entry(entry);
@@ -165,6 +178,7 @@ static inline void list_del_init(struct list_head *entry)
  * @list: the entry to move
  * @head: the head that will precede our entry
  */
+ //将list从一个链表删除,并插入到head的后面
 static inline void list_move(struct list_head *list, struct list_head *head)
 {
 	__list_del_entry(list);
@@ -176,6 +190,7 @@ static inline void list_move(struct list_head *list, struct list_head *head)
  * @list: the entry to move
  * @head: the head that will follow our entry
  */
+ //将list从一个链表删除,并插入到head的前面
 static inline void list_move_tail(struct list_head *list,
 				  struct list_head *head)
 {
@@ -188,6 +203,7 @@ static inline void list_move_tail(struct list_head *list,
  * @list: the entry to test
  * @head: the head of the list
  */
+ //检查元素是否是链表的最后一个元素
 static inline int list_is_last(const struct list_head *list,
 				const struct list_head *head)
 {
@@ -198,6 +214,7 @@ static inline int list_is_last(const struct list_head *list,
  * list_empty - tests whether a list is empty
  * @head: the list to test.
  */
+ //判断链表是否为空
 static inline int list_empty(const struct list_head *head)
 {
 	return READ_ONCE(head->next) == head;
@@ -216,6 +233,7 @@ static inline int list_empty(const struct list_head *head)
  * to the list entry is list_del_init(). Eg. it cannot be used
  * if another CPU could re-list_add() it.
  */
+ //判断链表是否为空 同时检查next 和 prev
 static inline int list_empty_careful(const struct list_head *head)
 {
 	struct list_head *next = head->next;
@@ -226,6 +244,7 @@ static inline int list_empty_careful(const struct list_head *head)
  * list_rotate_left - rotate the list to the left
  * @head: the head of the list
  */
+ //将first插入到head前面(将head后面的元素移动到head前面)
 static inline void list_rotate_left(struct list_head *head)
 {
 	struct list_head *first;
@@ -240,6 +259,7 @@ static inline void list_rotate_left(struct list_head *head)
  * list_is_singular - tests whether a list has just one entry.
  * @head: the list to test.
  */
+ //检查链表是否只有一个元素
 static inline int list_is_singular(const struct list_head *head)
 {
 	return !list_empty(head) && (head->next == head->prev);
@@ -271,6 +291,7 @@ static inline void __list_cut_position(struct list_head *list,
  * losing its data.
  *
  */
+ //对两个链表分割
 static inline void list_cut_position(struct list_head *list,
 		struct list_head *head, struct list_head *entry)
 {
@@ -304,6 +325,7 @@ static inline void __list_splice(const struct list_head *list,
  * @list: the new list to add.
  * @head: the place to add it in the first list.
  */
+ //将head拼接到list上 (为栈设计)
 static inline void list_splice(const struct list_head *list,
 				struct list_head *head)
 {
@@ -362,6 +384,10 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @type:	the type of the struct this is embedded in.
  * @member:	the name of the list_head within the struct.
  */
+ //指针 ptr 是成员member的地址，也就是链表成员的地址，
+ //类型 type 是成员member嵌入的结构类型, 结构体类型，struct ***
+ //member 就是链表在结构type中的名称。 list
+ //宏返回的是嵌入的结构首地址
 #define list_entry(ptr, type, member) \
 	container_of(ptr, type, member)
 
@@ -373,6 +399,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  *
  * Note, that list is expected to be not empty.
  */
+ //获取链表第一个元素
 #define list_first_entry(ptr, type, member) \
 	list_entry((ptr)->next, type, member)
 
@@ -384,6 +411,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  *
  * Note, that list is expected to be not empty.
  */
+ //获取链表最后一个元素
 #define list_last_entry(ptr, type, member) \
 	list_entry((ptr)->prev, type, member)
 
@@ -422,6 +450,8 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @pos:	the &struct list_head to use as a loop cursor.
  * @head:	the head for your list.
  */
+ //向后遍历
+ // head 为链表头的链表元素，pos 将会被设置为目标对象的地址, 从head遍历pos (没有访问head)
 #define list_for_each(pos, head) \
 	for (pos = (head)->next; pos != (head); pos = pos->next)
 
@@ -430,6 +460,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * @pos:	the &struct list_head to use as a loop cursor.
  * @head:	the head for your list.
  */
+ //向前遍历 (没有访问head节点)
 #define list_for_each_prev(pos, head) \
 	for (pos = (head)->prev; pos != (head); pos = pos->prev)
 
@@ -621,6 +652,7 @@ static inline void list_splice_tail_init(struct list_head *list,
  * too wasteful.
  * You lose the ability to access the tail in O(1).
  */
+//散列链表 主要用于哈希算法中 一般其用于处理<key,value>类型的映射
 
 #define HLIST_HEAD_INIT { .first = NULL }
 #define HLIST_HEAD(name) struct hlist_head name = {  .first = NULL }
@@ -631,11 +663,14 @@ static inline void INIT_HLIST_NODE(struct hlist_node *h)
 	h->pprev = NULL;
 }
 
+//判断 hlist_node 对象是否加入到散列链表当中
+//没有在散列链表中 返回真
 static inline int hlist_unhashed(const struct hlist_node *h)
 {
 	return !h->pprev;
 }
 
+//判断由hlist_head构成的数组中是否为空 , 为空返回真
 static inline int hlist_empty(const struct hlist_head *h)
 {
 	return !READ_ONCE(h->first);
@@ -658,6 +693,7 @@ static inline void hlist_del(struct hlist_node *n)
 	n->pprev = LIST_POISON2;
 }
 
+//删除并重新初始化
 static inline void hlist_del_init(struct hlist_node *n)
 {
 	if (!hlist_unhashed(n)) {
@@ -676,6 +712,7 @@ static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 	n->pprev = &h->first;
 }
 
+//向前插入
 /* next must be != NULL */
 static inline void hlist_add_before(struct hlist_node *n,
 					struct hlist_node *next)
@@ -686,6 +723,7 @@ static inline void hlist_add_before(struct hlist_node *n,
 	WRITE_ONCE(*(n->pprev), n);
 }
 
+//向后插入
 static inline void hlist_add_behind(struct hlist_node *n,
 				    struct hlist_node *prev)
 {
@@ -703,6 +741,7 @@ static inline void hlist_add_fake(struct hlist_node *n)
 	n->pprev = &n->next;
 }
 
+//对 pprev 设置为指向自己的指针
 static inline bool hlist_fake(struct hlist_node *h)
 {
 	return h->pprev == &h->next;
@@ -722,6 +761,7 @@ hlist_is_singular_node(struct hlist_node *n, struct hlist_head *h)
  * Move a list from one list head to another. Fixup the pprev
  * reference of the first entry if it exists.
  */
+ //更换链表头
 static inline void hlist_move_list(struct hlist_head *old,
 				   struct hlist_head *new)
 {
@@ -731,6 +771,7 @@ static inline void hlist_move_list(struct hlist_head *old,
 	old->first = NULL;
 }
 
+//获得入口地址 (结构体地址)
 #define hlist_entry(ptr, type, member) container_of(ptr,type,member)
 
 #define hlist_for_each(pos, head) \

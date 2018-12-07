@@ -67,6 +67,7 @@ static inline int page_ref_count(struct page *page)
 	return atomic_read(&page->_refcount);
 }
 
+//计算这个页引用的次数, 为 0 表示页空闲, 为正整数表示页在使用
 static inline int page_count(struct page *page)
 {
 	return atomic_read(&compound_head(page)->_refcount);

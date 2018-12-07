@@ -292,14 +292,19 @@ struct ext4_io_submit {
 /*
  * Structure of a blocks group descriptor
  */
+ 
+//块组描述符
+
 struct ext4_group_desc
 {
-	__le32	bg_block_bitmap_lo;	/* Blocks bitmap block 数据块位图 */
-	__le32	bg_inode_bitmap_lo;	/* Inodes bitmap block inode位图 */
+	//数据块位图
+	__le32	bg_block_bitmap_lo;	/* Blocks bitmap block */
+	//inode位图 
+	__le32	bg_inode_bitmap_lo;	/* Inodes bitmap block */
 	__le32	bg_inode_table_lo;	/* Inodes table block inode表 */
-	__le16	bg_free_blocks_count_lo;/* Free blocks count */
-	__le16	bg_free_inodes_count_lo;/* Free inodes count */
-	__le16	bg_used_dirs_count_lo;	/* Directories count */
+	__le16	bg_free_blocks_count_lo;/* Free blocks count 块组中空闲数据块的个数 */
+	__le16	bg_free_inodes_count_lo;/* Free inodes count 块组中空闲inode的个数 */
+	__le16	bg_used_dirs_count_lo;	/* Directories count 块组中目录的个数 */
 	__le16	bg_flags;		/* EXT4_BG_flags (INODE_UNINIT, etc) */
 	__le32  bg_exclude_bitmap_lo;   /* Exclude bitmap for snapshots */
 	__le16  bg_block_bitmap_csum_lo;/* crc32c(s_uuid+grp_num+bbitmap) LE */
@@ -329,7 +334,16 @@ struct ext4_group_desc
 /*
  * Structure of a flex block group info
  */
-//Flexibel块组
+ 
+//Flexibel块组(4个块组 组成一个flex_bg)
+//4个块组 共用块组0的 块组0-3的数据块位图、块组0-3的inode位图、块组0-3的inode表
+/*
+Flexible块组的作用是：
+
+(1)  聚集元数据，加速元数据载入；
+
+(2)  使得大文件在磁盘上尽量连续；
+*/
 struct flex_groups {
 	atomic64_t	free_clusters;
 	atomic_t	free_inodes;
@@ -678,6 +692,9 @@ enum {
 /*
  * Structure of an inode on the disk
  */
+ 
+ //inode表
+ 
 struct ext4_inode {
 	__le16	i_mode;		/* File mode */
 	__le16	i_uid;		/* Low 16 bits of Owner Uid */
@@ -1179,15 +1196,15 @@ extern void ext4_set_bits(void *bm, int cur, int len);
 struct ext4_super_block {
 /*00*/	__le32	s_inodes_count;		/* Inodes count */
 	__le32	s_blocks_count_lo;	/* Blocks count */
-	__le32	s_r_blocks_count_lo;	/* Reserved blocks count */
-	__le32	s_free_blocks_count_lo;	/* Free blocks count */
+	__le32	s_r_blocks_count_lo;	/* Reserved blocks count 保留块的个数 */
+	__le32	s_free_blocks_count_lo;	/* Free blocks count 空闲块的个数 */
 /*10*/	__le32	s_free_inodes_count;	/* Free inodes count */
 	__le32	s_first_data_block;	/* First Data Block */
 	__le32	s_log_block_size;	/* Block size */
 	__le32	s_log_cluster_size;	/* Allocation cluster size */
 /*20*/	__le32	s_blocks_per_group;	/* # Blocks per group */
 	__le32	s_clusters_per_group;	/* # Clusters per group */
-	__le32	s_inodes_per_group;	/* # Inodes per group */
+	__le32	s_inodes_per_group;	/* # Inodes per group 每组中inode的个数 */
 	__le32	s_mtime;		/* Mount time */
 /*30*/	__le32	s_wtime;		/* Write time */
 	__le16	s_mnt_count;		/* Mount count */
@@ -1244,7 +1261,7 @@ struct ext4_super_block {
 	__u8	s_jnl_backup_type;
 	__le16  s_desc_size;		/* size of group descriptor */
 /*100*/	__le32	s_default_mount_opts;
-	__le32	s_first_meta_bg;	/* First metablock block group */
+	__le32	s_first_meta_bg;	/* First metablock block group 描述第一个使用的元块组的块组*/
 	__le32	s_mkfs_time;		/* When the filesystem was created */
 	__le32	s_jnl_blocks[17];	/* Backup of the journal inode */
 	/* 64bit support valid if EXT4_FEATURE_COMPAT_64BIT */
@@ -1258,7 +1275,7 @@ struct ext4_super_block {
 	__le16  s_mmp_update_interval;  /* # seconds to wait in MMP checking */
 	__le64  s_mmp_block;            /* Block for multi-mount protection */
 	__le32  s_raid_stripe_width;    /* blocks on all data disks (N*stride)*/
-	__u8	s_log_groups_per_flex;  /* FLEX_BG group size */
+	__u8	s_log_groups_per_flex;  /* FLEX_BG group size flex_bg块组的个数 */
 	__u8	s_checksum_type;	/* metadata checksum algorithm used */
 	__u8	s_encryption_level;	/* versioning level for encryption */
 	__u8	s_reserved_pad;		/* Padding to next 32bits */
@@ -1296,6 +1313,73 @@ struct ext4_super_block {
 	__le32	s_checksum;		/* crc32c(superblock) */
 };
 
+/*
+
+kevin@kevin-virtual-machine:~$ df -hT
+文件系统       类型      容量  已用  可用 已用% 挂载点
+udev           devtmpfs  2.0G   12K  2.0G    1% /dev
+tmpfs          tmpfs     404M  4.5M  399M    2% /run
+/dev/sda1      ext4       91G   23G   64G   27% /
+none           tmpfs     4.0K     0  4.0K    0% /sys/fs/cgroup
+none           tmpfs     5.0M     0  5.0M    0% /run/lock
+none           tmpfs     2.0G   76K  2.0G    1% /run/shm
+none           tmpfs     100M   56K  100M    1% /run/user
+.host:/        vmhgfs    101G  9.0G   92G    9% /mnt/hgfs
+
+kevin@kevin-virtual-machine:~$ sudo dumpe2fs -h /dev/sda1 
+dumpe2fs 1.42.9 (4-Feb-2014)
+Filesystem volume name:   <none>
+Last mounted on:          /
+Filesystem UUID:          aaf8dae9-9bfc-491b-9d87-0483a4ac689b
+Filesystem magic number:  0xEF53
+Filesystem revision #:    1 (dynamic)
+Filesystem features:      has_journal ext_attr resize_inode dir_index filetype needs_recovery extent flex_bg sparse_super large_file huge_file uninit_bg dir_nlink extra_isize
+Filesystem flags:         signed_directory_hash 
+Default mount options:    user_xattr acl
+Filesystem state:         clean
+Errors behavior:          Continue
+Filesystem OS type:       Linux
+Inode count:              6029312
+Block count:              24116480
+Reserved block count:     1006569
+Free blocks:              17786069
+Free inodes:              5013954
+First block:              0
+Block size:               4096
+Fragment size:            4096
+Reserved GDT blocks:      1018
+Blocks per group:         32768
+Fragments per group:      32768
+Inodes per group:         8192
+Inode blocks per group:   512
+Flex block group size:    16
+Filesystem created:       Wed Apr 25 17:29:48 2018
+Last mount time:          Wed Aug  8 17:29:52 2018
+Last write time:          Wed Aug  8 17:29:52 2018
+Mount count:              25
+Maximum mount count:      -1
+Last checked:             Wed Apr 25 17:29:48 2018
+Check interval:           0 (<none>)
+Lifetime writes:          86 GB
+Reserved blocks uid:      0 (user root)
+Reserved blocks gid:      0 (group root)
+First inode:              11
+Inode size:	          256
+Required extra isize:     28
+Desired extra isize:      28
+Journal inode:            8
+First orphan inode:       534746
+Default directory hash:   half_md4
+Directory Hash Seed:      e341ad8e-e322-4484-b642-6161c474dcb1
+Journal backup:           inode blocks
+Journal features:         journal_incompat_revoke
+日志大小:             128M
+Journal length:           32768
+Journal sequence:         0x000269e8
+Journal start:            11640
+
+*/
+
 #define EXT4_S_ERR_LEN (EXT4_S_ERR_END - EXT4_S_ERR_START)
 
 #ifdef __KERNEL__
@@ -1320,6 +1404,7 @@ struct ext4_super_block {
 /*
  * fourth extended-fs super-block data in memory
  */
+ //超级块信息 存在内存中
 struct ext4_sb_info {
 	unsigned long s_desc_size;	/* Size of a group descriptor in bytes */
 	unsigned long s_inodes_per_block;/* Number of inodes per block */
@@ -1870,6 +1955,7 @@ static inline int ext4_forced_shutdown(struct ext4_sb_info *sbi)
  */
 #define EXT4_NAME_LEN 255
 
+//目录项
 struct ext4_dir_entry {
 	__le32	inode;			/* Inode number */
 	__le16	rec_len;		/* Directory entry length */

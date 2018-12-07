@@ -87,37 +87,55 @@ extern struct dentry_stat_t dentry_stat;
 
 #define d_lock	d_lockref.lock
 
+//通用文件模型 VFS 目录项对象
+//目录项对象在磁盘上并没有对应的映像
+
+
 struct dentry {
 	/* RCU lookup touched fields */
 	unsigned int d_flags;		/* protected by d_lock */
 	seqcount_t d_seq;		/* per dentry seqlock */
+	//指向散列表 表项链表的指针
 	struct hlist_bl_node d_hash;	/* lookup hash list */
+	//父目录的目录项对象
 	struct dentry *d_parent;	/* parent directory */
+	//文件名
 	struct qstr d_name;
+	//与文件名关联的索引节点
 	struct inode *d_inode;		/* Where the name belongs to - NULL is
 					 * negative */
+	//存放短文件名的空间
 	unsigned char d_iname[DNAME_INLINE_LEN];	/* small names */
 
 	/* Ref lookup also touches following */
 	struct lockref d_lockref;	/* per-dentry lock and refcount */
+	//目录项方法
 	const struct dentry_operations *d_op;
+	//文件的超级块对象
 	struct super_block *d_sb;	/* The root of the dentry tree */
+	//由d_revalidate方法使用
 	unsigned long d_time;		/* used by d_revalidate */
+	//依赖于文件系统的数据
 	void *d_fsdata;			/* fs-specific data */
 
 	union {
+		//用于未使用 unused 目录项链表的指针
 		struct list_head d_lru;		/* LRU list */
 		wait_queue_head_t *d_wait;	/* in-lookup ones only */
 	};
+	//对于目录而言,用于同一父目录中的目录项链表的指针
 	struct list_head d_child;	/* child of parent list */
+	//对目录而言, 子目录项链表的头
 	struct list_head d_subdirs;	/* our children */
 	/*
 	 * d_alias and d_rcu can share memory
 	 */
 	union {
+		//用于与同一索引节点(别名)相关的目录项链表的指针
 		struct hlist_node d_alias;	/* inode alias list */
 		struct hlist_bl_node d_in_lookup_hash;	/* only for in-lookup ones */
-	 	struct rcu_head d_rcu;
+		//回收目录项对象时, 由RCU描述符使用
+		struct rcu_head d_rcu;
 	} d_u;
 } __randomize_layout;
 
@@ -134,15 +152,24 @@ enum dentry_d_lock_class
 };
 
 struct dentry_operations {
+	//在把目录项对象转换为一个文件路径名之前, 判断该目录项对象是否仍然有效.
+	//缺省的VFS函数什么也不做, 而网络文件系统可以指定自己的函数
 	int (*d_revalidate)(struct dentry *, unsigned int);
 	int (*d_weak_revalidate)(struct dentry *, unsigned int);
+	//生成一个散列值, 用于目录项散列表.
+	//第一个参数:标识包含路径分量的目录.
+	//第二个参数:该结构包含要查找的路径名分量以及由散列函数生成的散列值
 	int (*d_hash)(const struct dentry *, struct qstr *);
+	//比较两个文件名
 	int (*d_compare)(const struct dentry *,
 			unsigned int, const char *, const struct qstr *);
+	//当对目录项对象的最后一个引用被删除(d_count变为"0")时, 调用该方法
 	int (*d_delete)(const struct dentry *);
 	int (*d_init)(struct dentry *);
+	//当要释放一个目录项对象时(放入slab分配器), 调用该方法.
 	void (*d_release)(struct dentry *);
 	void (*d_prune)(struct dentry *);
+	//当一个目录项对象变为"负"状态(即丢弃它的索引节点)时, 调用该方法.
 	void (*d_iput)(struct dentry *, struct inode *);
 	char *(*d_dname)(struct dentry *, char *, int);
 	struct vfsmount *(*d_automount)(struct path *);

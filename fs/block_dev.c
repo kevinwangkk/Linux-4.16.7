@@ -843,6 +843,7 @@ static int bdev_set(struct inode *inode, void *data)
 	return 0;
 }
 
+//all_bdevs是把内核中所有注册的块设备通过链表管理和维护
 static LIST_HEAD(all_bdevs);
 
 /*

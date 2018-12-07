@@ -484,8 +484,12 @@ static inline struct page *alloc_pages_node(int nid, gfp_t gfp_mask,
 }
 
 #ifdef CONFIG_NUMA
-extern struct page *alloc_pages_current(gfp_t gfp_mask, unsigned order);
+extern struct page *alloc_pages_current(gfp_t gfp_mask, unsigned order);page_address
 
+//page_address() 把页转换成它的逻辑地址 (highmem 要找哈希表查找映射关系 
+//                                       lowmem 是一一映射 算出偏移即可)
+//分配(2的order次方)个连续的物理页 ,
+//返回值: 指向第一个页的page结构体 , 出错返回NULL
 static inline struct page *
 alloc_pages(gfp_t gfp_mask, unsigned int order)
 {
@@ -510,7 +514,10 @@ extern struct page *alloc_pages_vma(gfp_t gfp_mask, int order,
 #define alloc_page_vma_node(gfp_mask, vma, addr, node)		\
 	alloc_pages_vma(gfp_mask, 0, vma, addr, node, false)
 
+//分配(2的order次方)个连续的物理页 获取逻辑地址 
+//调用关系:__get_free_pages() -> alloc_pages() -> page_address()
 extern unsigned long __get_free_pages(gfp_t gfp_mask, unsigned int order);
+//返回的页的内容全部为0 
 extern unsigned long get_zeroed_page(gfp_t gfp_mask);
 
 void *alloc_pages_exact(size_t size, gfp_t gfp_mask);
@@ -523,6 +530,7 @@ void * __meminit alloc_pages_exact_nid(int nid, size_t size, gfp_t gfp_mask);
 #define __get_dma_pages(gfp_mask, order) \
 		__get_free_pages((gfp_mask) | GFP_DMA, (order))
 
+//释放页
 extern void __free_pages(struct page *page, unsigned int order);
 extern void free_pages(unsigned long addr, unsigned int order);
 extern void free_unref_page(struct page *page);

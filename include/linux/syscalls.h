@@ -8,6 +8,8 @@
  * See the file COPYING for more details.
  */
 
+//linux 系统调用接口
+
 #ifndef _LINUX_SYSCALLS_H
 #define _LINUX_SYSCALLS_H
 

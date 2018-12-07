@@ -5,10 +5,16 @@
 #include <linux/ns_common.h>
 #include <linux/fs_pin.h>
 
+
+//进程的命名空间由进程描述符的mnt_namespace字段指向该结构
+
 struct mnt_namespace {
+	//引用计数器
 	atomic_t		count;
 	struct ns_common	ns;
+	//命名空间根目录的已安装文件系统描述符
 	struct mount *	root;
+	//所有已安装文件系统描述符链表的头
 	struct list_head	list;
 	struct user_namespace	*user_ns;
 	struct ucounts		*ucounts;
@@ -31,9 +37,15 @@ struct mountpoint {
 	int m_count;
 };
 
+//mount结构体保存已安装的文件系统信息,如安装点和安装标志以及
+//要安装文件系统与其他已安装文件系统之间的关系.
+
 struct mount {
+	//用于散列表链表的指针
 	struct hlist_node mnt_hash;
+	//指向父文件系统, 这个文件系统安装在其上
 	struct mount *mnt_parent;
+	//指向这个文件系统安装点目录的dentry
 	struct dentry *mnt_mountpoint;
 	struct vfsmount mnt;
 	union {
@@ -43,13 +55,18 @@ struct mount {
 #ifdef CONFIG_SMP
 	struct mnt_pcp __percpu *mnt_pcp;
 #else
+	//引用计数器(增加该值以禁止文件系统被卸载)
 	int mnt_count;
 	int mnt_writers;
 #endif
+	//包含所有文件系统描述符链表的头(相当于这个文件系统)
 	struct list_head mnt_mounts;	/* list of children, anchored here */
+	//用于已安装文件系统链表mnt_mounts的指针
 	struct list_head mnt_child;	/* and going through their mnt_child */
 	struct list_head mnt_instance;	/* mount instance on sb->s_mounts */
+	//设备文件名
 	const char *mnt_devname;	/* Name of device e.g. /dev/dsk/hda1 */
+	//已安装文件系统描述符的namespace链表的指针
 	struct list_head mnt_list;
 	struct list_head mnt_expire;	/* link in fs-specific expiry list */
 	struct list_head mnt_share;	/* circular list of shared mounts */

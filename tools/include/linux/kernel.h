@@ -13,7 +13,7 @@
 #define UINT_MAX	(~0U)
 #endif
 
-// wangkaiwen 向上取整
+//向上取整 (50+32-1)/32 = 2   2*32 64 
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 
 #define PERF_ALIGN(x, a)	__PERF_ALIGN_MASK(x, (typeof(x))(a)-1)

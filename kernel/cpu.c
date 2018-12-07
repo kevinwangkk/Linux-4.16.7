@@ -1968,7 +1968,7 @@ const unsigned long cpu_bit_bitmap[BITS_PER_LONG+1][BITS_TO_LONGS(NR_CPUS)] = {
 EXPORT_SYMBOL_GPL(cpu_bit_bitmap);
 
 
-//
+// 数组 描述cpu状态
 const DECLARE_BITMAP(cpu_all_bits, NR_CPUS) = CPU_BITS_ALL;
 EXPORT_SYMBOL(cpu_all_bits);
 
