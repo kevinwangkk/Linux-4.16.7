@@ -22,15 +22,16 @@
 #include <asm/byteorder.h>
 #include <linux/socket.h>
 
+// TCP报文头
 struct tcphdr {
 	__be16	source;
 	__be16	dest;
-	__be32	seq;
-	__be32	ack_seq;
+	__be32	seq; //发送序号
+	__be32	ack_seq; //确认序号 (需要回复的序号)
 #if defined(__LITTLE_ENDIAN_BITFIELD)
-	__u16	res1:4,
-		doff:4,
-		fin:1,
+	__u16	res1:4, //保留了4位
+		doff:4, //数据偏移位置
+		fin:1,  //8个标识位
 		syn:1,
 		rst:1,
 		psh:1,
