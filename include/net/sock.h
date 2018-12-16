@@ -454,14 +454,14 @@ struct sock {
 	unsigned long	        sk_lingertime;
 	struct proto		*sk_prot_creator;
 	rwlock_t		sk_callback_lock;
-	int			sk_err,
+	int			sk_err,  // 记录此sk上是否发生错误
 				sk_err_soft;
 	u32			sk_ack_backlog;
 	u32			sk_max_ack_backlog;
 	kuid_t			sk_uid;
 	struct pid		*sk_peer_pid;
 	const struct cred	*sk_peer_cred;
-	long			sk_rcvtimeo;
+	long			sk_rcvtimeo;  //wangkaiwen 接收超时
 	ktime_t			sk_stamp;
 	u16			sk_tsflags;
 	u8			sk_shutdown;

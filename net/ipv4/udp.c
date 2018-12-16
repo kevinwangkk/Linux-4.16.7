@@ -1074,7 +1074,7 @@ do_append_data:
 		udp_flush_pending_frames(sk);
 	else if (!corkreq)
 		err = udp_push_pending_frames(sk);
-	else if (unlikely(skb_queue_empty(&sk->sk_write_queue)))
+	else if (unlikely(skb_queue_empty(&sk->sk_write_queue)))  //wangkaiwen 把msg 加入到 sk_write_queue
 		up->pending = 0;
 	release_sock(sk);
 
@@ -1227,7 +1227,7 @@ static void udp_rmem_release(struct sock *sk, int size, int partial,
 	atomic_sub(size, &sk->sk_rmem_alloc);
 
 	/* this can save us from acquiring the rx queue lock on next receive */
-	skb_queue_splice_tail_init(sk_queue, &up->reader_queue);
+	skb_queue_splice_tail_init(sk_queue, &up->reader_queue);  //wangkaiwen 把sk_receive_queue 移到 reader_queue队列
 
 	if (!rx_queue_lock_held)
 		spin_unlock(&sk_queue->lock);
@@ -1488,15 +1488,15 @@ EXPORT_SYMBOL(udp_ioctl);
 struct sk_buff *__skb_recv_udp(struct sock *sk, unsigned int flags,
 			       int noblock, int *peeked, int *off, int *err)
 {
-	struct sk_buff_head *sk_queue = &sk->sk_receive_queue;
+	struct sk_buff_head *sk_queue = &sk->sk_receive_queue;  //wangkaiwen sk_receive_queue
 	struct sk_buff_head *queue;
 	struct sk_buff *last;
 	long timeo;
 	int error;
 
 	queue = &udp_sk(sk)->reader_queue;
-	flags |= noblock ? MSG_DONTWAIT : 0;
-	timeo = sock_rcvtimeo(sk, flags & MSG_DONTWAIT);
+	flags |= noblock ? MSG_DONTWAIT : 0;  //wangkaiwen 是否进行等待, 
+	timeo = sock_rcvtimeo(sk, flags & MSG_DONTWAIT);  //wangkaiwen 获取等待超时时间
 	do {
 		struct sk_buff *skb;
 
@@ -1539,11 +1539,11 @@ struct sk_buff *__skb_recv_udp(struct sock *sk, unsigned int flags,
 			if (skb)
 				return skb;
 
-busy_check:
+busy_check: //wangkaiwen 
 			if (!sk_can_busy_loop(sk))
 				break;
 
-			sk_busy_loop(sk, flags & MSG_DONTWAIT);
+			sk_busy_loop(sk, flags & MSG_DONTWAIT);  //wangkaiwen 进行用户态级poll
 		} while (!skb_queue_empty(sk_queue));
 
 		/* sk_queue is empty, reader_queue may contain peeked packets */
@@ -1577,18 +1577,18 @@ int udp_recvmsg(struct sock *sk, struct msghdr *msg, size_t len, int noblock,
 		return ip_recv_error(sk, msg, len, addr_len);
 
 try_again:
-	peeking = flags & MSG_PEEK;
+	peeking = flags & MSG_PEEK;   //wangkaiwen PEEK
 	off = sk_peek_offset(sk, flags);
 	skb = __skb_recv_udp(sk, flags, noblock, &peeked, &off, &err);
 	if (!skb)
 		return err;
 
-	ulen = udp_skb_len(skb);
-	copied = len;
+	ulen = udp_skb_len(skb); //wangkaiwen 获取数据长度
+	copied = len; //设置需要拷贝的数据长度
 	if (copied > ulen - off)
 		copied = ulen - off;
 	else if (copied < ulen)
-		msg->msg_flags |= MSG_TRUNC;
+		msg->msg_flags |= MSG_TRUNC; //用户空间buf满
 
 	/*
 	 * If checksum is needed at all, try to do it while copying the
@@ -1604,13 +1604,14 @@ try_again:
 			goto csum_copy_err;
 	}
 
+//wangkaiwen 拷贝数据
 	if (checksum_valid || udp_skb_csum_unnecessary(skb)) {
 		if (udp_skb_is_linear(skb))
 			err = copy_linear_skb(skb, copied, off, &msg->msg_iter);
 		else
 			err = skb_copy_datagram_msg(skb, off, msg, copied);
 	} else {
-		err = skb_copy_and_csum_datagram_msg(skb, off, msg);
+		err = skb_copy_and_csum_datagram_msg(skb, off, msg);  //Copy and checksum skb to user iovec. 用户空间描述
 
 		if (err == -EINVAL)
 			goto csum_copy_err;
