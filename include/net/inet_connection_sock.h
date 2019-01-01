@@ -94,8 +94,8 @@ struct inet_connection_sock {
 	struct request_sock_queue icsk_accept_queue;
 	struct inet_bind_bucket	  *icsk_bind_hash;
 	unsigned long		  icsk_timeout;
- 	struct timer_list	  icsk_retransmit_timer;
- 	struct timer_list	  icsk_delack_timer;
+ 	struct timer_list	  icsk_retransmit_timer;  //wangkaiwen  重传定时器
+ 	struct timer_list	  icsk_delack_timer;      // 延时确认定时器
 	__u32			  icsk_rto;
 	__u32			  icsk_pmtu_cookie;
 	const struct tcp_congestion_ops *icsk_ca_ops;
@@ -142,6 +142,7 @@ struct inet_connection_sock {
 #define ICSK_CA_PRIV_SIZE      (11 * sizeof(u64))
 };
 
+//wangkaiwen tcp timer
 #define ICSK_TIME_RETRANS	1	/* Retransmit timer */
 #define ICSK_TIME_DACK		2	/* Delayed ack timer */
 #define ICSK_TIME_PROBE0	3	/* Zero window probe timer */
@@ -220,6 +221,7 @@ static inline void inet_csk_clear_xmit_timer(struct sock *sk, const int what)
 #endif
 }
 
+//wangkaiwen 设置定时器 复位时间
 /*
  *	Reset the retransmission timer
  */

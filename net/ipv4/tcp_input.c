@@ -3506,10 +3506,10 @@ static int tcp_ack(struct sock *sk, const struct sk_buff *skb, int flag)
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct tcp_sacktag_state sack_state;
 	struct rate_sample rs = { .prior_delivered = 0 };
-	u32 prior_snd_una = tp->snd_una;
+	u32 prior_snd_una = tp->snd_una;  //对端未确认的数据
 	bool is_sack_reneg = tp->is_sack_reneg;
-	u32 ack_seq = TCP_SKB_CB(skb)->seq;
-	u32 ack = TCP_SKB_CB(skb)->ack_seq;
+	u32 ack_seq = TCP_SKB_CB(skb)->seq;   //wangkaiwen 数据起始序列号
+	u32 ack = TCP_SKB_CB(skb)->ack_seq;   //对端的 确认序列号
 	bool is_dupack = false;
 	int prior_packets = tp->packets_out;
 	u32 delivered = tp->delivered;

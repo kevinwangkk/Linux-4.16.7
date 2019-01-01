@@ -559,7 +559,7 @@ void tcp_write_timer_handler(struct sock *sk)
 	}
 
 	tcp_mstamp_refresh(tcp_sk(sk));
-	event = icsk->icsk_pending;
+	event = icsk->icsk_pending;  //wangkaiwen 定时器类型
 
 	switch (event) {
 	case ICSK_TIME_REO_TIMEOUT:
@@ -710,6 +710,7 @@ out:
 
 void tcp_init_xmit_timers(struct sock *sk)
 {
+	//wangkaiwen  注册3个回调函数
 	inet_csk_init_xmit_timers(sk, &tcp_write_timer, &tcp_delack_timer,
 				  &tcp_keepalive_timer);
 	hrtimer_init(&tcp_sk(sk)->pacing_timer, CLOCK_MONOTONIC,

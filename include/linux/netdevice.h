@@ -1668,17 +1668,25 @@ enum netdev_priv_flags {
  *	moves out.
  */
 
+//wangkaiwen 网络设备的实例结构体
 struct net_device {
 	char			name[IFNAMSIZ];
+	
+	//设备名散列链表的链表元素
 	struct hlist_node	name_hlist;
 	struct dev_ifalias	__rcu *ifalias;
 	/*
 	 *	I/O specific fields
 	 *	FIXME: Merge these and struct ifmap into one
 	 */
+	//I/O相关字段
+	//共享内存结束位置
 	unsigned long		mem_end;
+	//共享内存起始位置
 	unsigned long		mem_start;
+	//设备I/O地址
 	unsigned long		base_addr;
+	//设备irq编号
 	int			irq;
 
 	/*
@@ -1709,6 +1717,7 @@ struct net_device {
 	netdev_features_t	mpls_features;
 	netdev_features_t	gso_partial_features;
 
+	//接口索引 设备的唯一标识符 interface index
 	int			ifindex;
 	int			group;
 
@@ -1742,6 +1751,7 @@ struct net_device {
 	const struct xfrmdev_ops *xfrmdev_ops;
 #endif
 
+	//硬件首部描述
 	const struct header_ops *header_ops;
 
 	unsigned int		flags;
@@ -1756,10 +1766,13 @@ struct net_device {
 	unsigned char		if_port;
 	unsigned char		dma;
 
+	//接口MTU值
 	unsigned int		mtu;
 	unsigned int		min_mtu;
 	unsigned int		max_mtu;
+	//接口硬件类型
 	unsigned short		type;
+	//接口硬件头长度
 	unsigned short		hard_header_len;
 	unsigned char		min_header_len;
 
@@ -1767,8 +1780,10 @@ struct net_device {
 	unsigned short		needed_tailroom;
 
 	/* Interface address info. */
+	//持久硬件地址
 	unsigned char		perm_addr[MAX_ADDR_LEN];
 	unsigned char		addr_assign_type;
+	//硬件地址长度
 	unsigned char		addr_len;
 	unsigned short		neigh_priv_len;
 	unsigned short          dev_id;
@@ -1798,9 +1813,13 @@ struct net_device {
 #if IS_ENABLED(CONFIG_TIPC)
 	struct tipc_bearer __rcu *tipc_ptr;
 #endif
+	//AppleTalk相关指针
 	void 			*atalk_ptr;
+	//ipv4相关数据
 	struct in_device __rcu	*ip_ptr;
+	//DECnet相关数据
 	struct dn_dev __rcu     *dn_ptr;
+	//ipv6相关数据
 	struct inet6_dev __rcu	*ip6_ptr;
 	void			*ax25_ptr;
 	struct wireless_dev	*ieee80211_ptr;
@@ -1832,6 +1851,7 @@ struct net_device {
 	struct nf_hook_entries __rcu *nf_hooks_ingress;
 #endif
 
+	//硬件多播地址
 	unsigned char		broadcast[MAX_ADDR_LEN];
 #ifdef CONFIG_RFS_ACCEL
 	struct cpu_rmap		*rx_cpu_rmap;
@@ -1889,6 +1909,7 @@ struct net_device {
 	struct netpoll_info __rcu	*npinfo;
 #endif
 
+	//设备所在的命名空间
 	possible_net_t			nd_net;
 
 	/* mid-layer private */
@@ -1907,6 +1928,7 @@ struct net_device {
 	struct mrp_port __rcu	*mrp_port;
 #endif
 
+	//class/net/name项
 	struct device		dev;
 	const struct attribute_group *sysfs_groups[4];
 	const struct attribute_group *sysfs_rx_queue_group;

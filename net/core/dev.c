@@ -783,6 +783,7 @@ EXPORT_SYMBOL(dev_get_by_name_rcu);
  *	matching device is found.
  */
 
+//wangkaiwen 根据设备名查找网络设备 用的 hlist 进行网络设备的存储
 struct net_device *dev_get_by_name(struct net *net, const char *name)
 {
 	struct net_device *dev;
@@ -857,6 +858,7 @@ EXPORT_SYMBOL(dev_get_by_index_rcu);
  *	dev_put to indicate they have finished with it.
  */
 
+//wangkaiwen 根据索引号查找网络设备
 struct net_device *dev_get_by_index(struct net *net, int ifindex)
 {
 	struct net_device *dev;
@@ -7804,6 +7806,7 @@ EXPORT_SYMBOL(netif_tx_stop_all_queues);
  *	will not get the same name.
  */
 
+//wangkaiwen 注册网络设备
 int register_netdevice(struct net_device *dev)
 {
 	int ret;
@@ -8278,6 +8281,8 @@ void netdev_freemem(struct net_device *dev)
  * and performs basic initialization.  Also allocates subqueue structs
  * for each queue on the device.
  */
+
+//wangkaiwen 分配一个网络设备 struct net_device
 struct net_device *alloc_netdev_mqs(int sizeof_priv, const char *name,
 		unsigned char name_assign_type,
 		void (*setup)(struct net_device *),

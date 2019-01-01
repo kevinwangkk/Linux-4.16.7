@@ -251,7 +251,7 @@ struct tcp_sock {
 	u32	rtt_seq;	/* sequence number to update rttvar	*/
 	struct  minmax rtt_min;
 
-	u32	packets_out;	/* Packets which are "in flight"	*/
+	u32	packets_out;	/* Packets which are "in flight"	*/  //发送的数据包,但还没有确认ACK的个数
 	u32	retrans_out;	/* Retransmitted packets out		*/
 	u32	max_packets_out;  /* max packets_out in last window */
 	u32	max_packets_seq;  /* right edge of max_packets_out flight */

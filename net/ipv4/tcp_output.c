@@ -48,21 +48,21 @@
 static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
 			   int push_one, gfp_t gfp);
 
-/* Account for new data that has been sent to the network. */
+/* Account for new data that has been sent to the network. */ //wangkaiwen 更新定时器
 static void tcp_event_new_data_sent(struct sock *sk, struct sk_buff *skb)
 {
 	struct inet_connection_sock *icsk = inet_csk(sk);
 	struct tcp_sock *tp = tcp_sk(sk);
-	unsigned int prior_packets = tp->packets_out;
+	unsigned int prior_packets = tp->packets_out;  
 
 	tp->snd_nxt = TCP_SKB_CB(skb)->end_seq;
 
 	__skb_unlink(skb, &sk->sk_write_queue);
 	tcp_rbtree_insert(&sk->tcp_rtx_queue, skb);
 
-	tp->packets_out += tcp_skb_pcount(skb);
+	tp->packets_out += tcp_skb_pcount(skb);   //更新
 	if (!prior_packets || icsk->icsk_pending == ICSK_TIME_LOSS_PROBE)
-		tcp_rearm_rto(sk);
+		tcp_rearm_rto(sk); //重置重传定时器
 
 	NET_ADD_STATS(sock_net(sk), LINUX_MIB_TCPORIGDATASENT,
 		      tcp_skb_pcount(skb));
@@ -245,7 +245,7 @@ EXPORT_SYMBOL(tcp_select_initial_window);
  * value can be stuffed directly into th->window for an outgoing
  * frame.
  */
-static u16 tcp_select_window(struct sock *sk)
+static u16 tcp_select_window(struct sock *sk)  //wangkaiwen 选择一个窗口
 {
 	struct tcp_sock *tp = tcp_sk(sk);
 	u32 old_win = tp->rcv_wnd;
@@ -266,6 +266,8 @@ static u16 tcp_select_window(struct sock *sk)
 				      LINUX_MIB_TCPWANTZEROWINDOWADV);
 		new_win = ALIGN(cur_win, 1 << tp->rx_opt.rcv_wscale);
 	}
+
+	//wangkaiwen 更新 新窗口值
 	tp->rcv_wnd = new_win;
 	tp->rcv_wup = tp->rcv_nxt;
 

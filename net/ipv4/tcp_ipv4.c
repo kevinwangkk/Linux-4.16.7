@@ -1643,9 +1643,9 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	if (!pskb_may_pull(skb, sizeof(struct tcphdr)))
 		goto discard_it;
 
-	th = (const struct tcphdr *)skb->data;
+	th = (const struct tcphdr *)skb->data;  //wangkaiwen 获取TCP头指针 IP的data 就是tcp的头
 
-	if (unlikely(th->doff < sizeof(struct tcphdr) / 4))
+	if (unlikely(th->doff < sizeof(struct tcphdr) / 4)) //tcp头是否有效
 		goto bad_packet;
 	if (!pskb_may_pull(skb, th->doff * 4))
 		goto discard_it;
@@ -1658,8 +1658,8 @@ int tcp_v4_rcv(struct sk_buff *skb)
 	if (skb_checksum_init(skb, IPPROTO_TCP, inet_compute_pseudo))
 		goto csum_error;
 
-	th = (const struct tcphdr *)skb->data;
-	iph = ip_hdr(skb);
+	th = (const struct tcphdr *)skb->data; //获取TCP头
+	iph = ip_hdr(skb);  // 
 lookup:
 	sk = __inet_lookup_skb(&tcp_hashinfo, skb, __tcp_hdrlen(th), th->source,
 			       th->dest, sdif, &refcounted);

@@ -280,12 +280,13 @@ struct nf_bridge_info {
 };
 #endif
 
+//wangkaiwen 使用一个表头来实现套接字缓冲区等待队列
 struct sk_buff_head {
 	/* These two members must be first. */
 	struct sk_buff	*next;
 	struct sk_buff	*prev;
 
-	__u32		qlen;
+	__u32		qlen;  //wangkaiwen 等待队列的长度[队列中成员数目]
 	spinlock_t	lock;
 };
 
@@ -2271,16 +2272,19 @@ static inline bool skb_transport_header_was_set(const struct sk_buff *skb)
 	return skb->transport_header != (typeof(skb->transport_header))~0U;
 }
 
+//wangkaiwen 获取传输层的头位置
 static inline unsigned char *skb_transport_header(const struct sk_buff *skb)
 {
 	return skb->head + skb->transport_header;
 }
 
+//wangkaiwen 将传输层首部置为数据的首部
 static inline void skb_reset_transport_header(struct sk_buff *skb)
 {
 	skb->transport_header = skb->data - skb->head;
 }
 
+//wangkaiwen 根据偏移量来设置传输层首部的起始地址
 static inline void skb_set_transport_header(struct sk_buff *skb,
 					    const int offset)
 {
